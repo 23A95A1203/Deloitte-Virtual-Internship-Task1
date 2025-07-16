@@ -1,39 +1,48 @@
 import json
+import unittest
 from datetime import datetime
 
-def iso_to_millis(iso_str):
-    dt = datetime.strptime(iso_str, "%Y-%m-%dT%H:%M:%SZ")
-    return int(dt.timestamp() * 1000)
+# 🔁 Convert format from data-1.json
+def convert_from_format_1(item):
+    return {
+        "device_id": item["device_id"],
+        "timestamp": item["timestamp"],
+        "value": item["value"]
+    }
 
-def unify_telemetry_data(data1, data2):
-    unified = []
+# 🔁 Convert format from data-2.json
+def convert_from_format_2(item):
+    dt = datetime.strptime(item["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
+    return {
+        "device_id": item["deviceId"],
+        "timestamp": int(dt.timestamp() * 1000),
+        "value": item["reading"]
+    }
 
-    # data‑1.json already in target format
+# 👇 Entry function to unify formats
+def main(data1, data2):
+    result = []
+
     for item in data1:
-        unified.append({
-            "device_id": item["device_id"],
-            "timestamp": item["timestamp"],
-            "value": item["value"]
-        })
+        result.append(convert_from_format_1(item))
 
-    # convert data‑2.json and append **after** data‑1.json items
     for item in data2:
-        unified.append({
-            "device_id": item["deviceId"],
-            "timestamp": iso_to_millis(item["timestamp"]),
-            "value": item["reading"]
-        })
+        result.append(convert_from_format_2(item))
 
-    # 👉 NO sorting – keep original‑file order
-    return unified
+    return result
 
+# ✅ Unit testing block
+class TestTelemetryFormat(unittest.TestCase):
+
+    def test_combined_output_matches_expected(self):
+        with open("data-1.json") as f1, open("data-2.json") as f2, open("data-result.json") as fres:
+            data1 = json.load(f1)
+            data2 = json.load(f2)
+            expected = json.load(fres)
+
+        result = main(data1, data2)
+        self.assertEqual(result, expected, "❌ Output does not match expected result")
+
+# 🧪 Run test only if executed directly
 if __name__ == "__main__":
-    with open("data-1.json") as f1, open("data-2.json") as f2, open("data-result.json") as fres:
-        data1 = json.load(f1)
-        data2 = json.load(f2)
-        expected = json.load(fres)
-
-        result = unify_telemetry_data(data1, data2)
-
-        assert result == expected, "❌ Test Failed: Output doesn't match expected result."
-        print("✅ All tests passed! Output matches expected result.")
+    unittest.main()
