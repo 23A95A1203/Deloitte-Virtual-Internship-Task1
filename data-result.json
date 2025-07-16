@@ -1,0 +1,12 @@
+[
+  {
+    "device_id": "sensor-1",
+    "timestamp": 1625245800000,
+    "value": 34.5
+  },
+  {
+    "device_id": "sensor-2",
+    "timestamp": 1625236200000,
+    "value": 36.2
+  }
+]
